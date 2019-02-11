@@ -8,5 +8,8 @@ Minesweeper
 * W: Regenerate board
 * E: Hide board
 
+#### Settings:
+Game Parameters are customizable in Settings.java
+
 #### TODO:
 * Detect win conditions

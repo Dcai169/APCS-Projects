@@ -10,7 +10,7 @@ public class Square {
     private Font font;
 
     public Square(int r, int c, Square[][] board) {
-        this.isMine = isMine;
+        this.isMine = false;
         this.r = r;
         this.c = c;
         this.isRevealed = false;
@@ -53,7 +53,7 @@ public class Square {
 
     public void lClick() {
         recursiveReveal();
-
+        flaggedReveal();
     }
 
     public void rClick(){
@@ -70,6 +70,23 @@ public class Square {
                     for (int j = -1; j < 2; j++) {
                         if (i+r >= 0 && j+c >= 0 && i+r < board.length && j+c < board[0].length){
                             if (!board[r+i][c+j].isMine){
+                                board[r+i][c+j].lClick();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void flaggedReveal() {
+        if(!isRevealed && !isFlagged) {
+            isRevealed = true;
+            if(numNeighborFlags(board) == neighborMines) {
+                for (int i = -1; i < 2; i++) {
+                    for (int j = -1; j < 2; j++) {
+                        if (i+r >= 0 && j+c >= 0 && i+r < board.length && j+c < board[0].length){
+                            if (!board[r+i][c+j].isFlagged){
                                 board[r+i][c+j].lClick();
                             }
                         }
@@ -165,21 +182,38 @@ public class Square {
         }
     }
 
-    public int numNeighbors(Square[][] board) {
-        int neighbors = 0;
+    public int numNeighborMines(Square[][] board) {
+        int neighborMines = 0;
         for (int i = -1; i < 2; i++) {
             for (int j = -1; j < 2; j++) {
                 if (i+r >= 0 && j+c >= 0 && i+r < board.length && j+c < board[0].length){
-                    if (board[r+i][c+j].isMine){
-                        neighbors++;
+                    if (board[r+i][c+j].isMine()){
+                        neighborMines++;
                     }
                 }
             }
         }
-        if (board[r][c].isMine){
-            neighbors--;
+        if (board[r][c].isMine()){
+            neighborMines--;
         }
-        return neighbors;
+        return neighborMines;
+    }
+
+    public int numNeighborFlags(Square[][] board){
+        int neighborFlags = 0;
+        for (int i = -1; i < 2; i++) {
+            for (int j = -1; j < 2; j++) {
+                if (i+r >= 0 && j+c >= 0 && i+r < board.length && j+c < board[0].length){
+                    if (board[r+i][c+j].isFlagged()){
+                        neighborFlags++;
+                    }
+                }
+            }
+        }
+        if (board[r][c].isFlagged()){
+            neighborFlags--;
+        }
+        return neighborFlags;
     }
 
     public void setNeighborMines(int neighborMines) {

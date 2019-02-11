@@ -11,7 +11,7 @@ public class MineSweeper extends JPanel {
     private int mX, mY;
     private int r, c;
 
-    public static final int SIZE = 50;
+    public static final int SIZE = Settings.SIZE;
 
     public MineSweeper(int width, int height) {
         this.width = width;

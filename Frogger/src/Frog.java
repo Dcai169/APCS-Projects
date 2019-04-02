@@ -46,6 +46,7 @@ public class Frog extends Sprite {
         //Audio for hop.wav
         if (audioLoaded) {
             hopAudio.start();
+            hopAudio.setFramePosition(0);
         }
     }
 

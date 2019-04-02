@@ -3,14 +3,14 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 
-//TODO: PUT YOUR NAME HERE
-
 public class FroggerMain extends JPanel {
 
     //instance fields for the general environment
-    public static final int FRAME_WIDTH = 1000, FRAME_HEIGHT = 600;
-    private Timer timer;
+    public static final int FRAME_WIDTH = 1000, FRAME_HEIGHT = 600, LIMIT = 180;
+    private Timer timer, countdown;
+    private int time, score, deaths;
     private boolean[] keys;
+    private Font font;
 
     //instance fields for frogger.
     private Frog frog;
@@ -21,12 +21,13 @@ public class FroggerMain extends JPanel {
 
     public FroggerMain() {
         keys = new boolean[512]; //should be enough to hold any key code.
-        //TODO: initialize the instance fields.
+        font = new Font("Arial", Font.PLAIN,18);
         obstacles = new ArrayList<Sprite>();
         rideables = new ArrayList<Rideable>();
         frog = new Frog(500, 550);
-        //TODO: init obstacles arraylist
-        //TODO: add obstacles - cars and stuff
+        score = 0;
+
+        // Vehicles
         // Westbound slow lane
         for (int i = 0; i < 6; i++) {
             Vehicle vehicle = new Vehicle(i*100, 325, Sprite.WEST, 1);
@@ -121,18 +122,34 @@ public class FroggerMain extends JPanel {
                         ((Sprite) rideable).update();
                     }
                     if (frog.intersects(goal)){
-                        fps += 10;
+                        score = score + fps/5;
+                        fps += 5;
                         timer.setDelay(1000/fps);
                         frog.reset();
                     }
                 } else {
                     frog.reset();
+                    deaths++;
                 }
 
                 repaint(); //always the last line.  after updating, refresh the graphics.
             }
         });
+        countdown = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                if (time < LIMIT) {
+                    time++;
+                } else {
+                    timer.stop();
+                    countdown.stop();
+                    time = 0;
+                    repaint();
+                }
+            }
+        });
         timer.start();
+        countdown.start();
 
         setKeyListener();
 
@@ -142,21 +159,30 @@ public class FroggerMain extends JPanel {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
-        g2.setColor(new Color(0,0,0));
-        g2.fillRect(0,325, FRAME_WIDTH, 450);
-        g2.setColor(new Color(15, 117, 24));
-        g2.fillRect(0, 475, FRAME_WIDTH, FRAME_HEIGHT -475);
-        g2.fillRect(0,200, FRAME_WIDTH,125);
-        g2.fillRect(0,0, FRAME_WIDTH, 75);
-        for (Sprite obj:obstacles) {
-            obj.draw(g2);
+        if (countdown.isRunning()) {
+            g2.setColor(new Color(0, 0, 0));
+            g2.fillRect(0, 325, FRAME_WIDTH, 450);
+            g2.setColor(new Color(15, 117, 24));
+            g2.fillRect(0, 475, FRAME_WIDTH, FRAME_HEIGHT - 475);
+            g2.fillRect(0, 200, FRAME_WIDTH, 125);
+            g2.fillRect(0, 0, FRAME_WIDTH, 75);
+            for (Sprite obj : obstacles) {
+                obj.draw(g2);
+            }
+            for (Rideable rideable : rideables) {
+                ((Sprite) rideable).draw(g2);
+            }
+            frog.draw(g2);
+            goal.draw(g2);
+            g2.setColor(new Color(255, 255, 255));
+            g2.setFont(font);
+            g2.drawString("Difficulty: " + Integer.toString(fps), 5, 18);
+            g2.drawString("Time Remaining: " + Integer.toString(LIMIT - time), 5, 36);
+            g2.drawString("Score: " + Integer.toString(score), 5, 54);
+            g2.drawString("Deaths: " + Integer.toString(deaths), 5 ,72);
+        } else {
+            gameOver(g2, score, deaths);
         }
-        for (Rideable rideable : rideables){
-            ((Sprite) rideable).draw(g2);
-        }
-        frog.draw(g2);
-        goal.draw(g2);
-        //TODO: draw all the obstacles.
     }
 
     public void moveTheFrog() {
@@ -184,12 +210,6 @@ public class FroggerMain extends JPanel {
             keys[KeyEvent.VK_D] = false;
             keys[KeyEvent.VK_RIGHT] = false;
         }
-        if (keys[KeyEvent.VK_ESCAPE]){
-            System.exit(0);
-        }
-        if (keys[KeyEvent.VK_R]){
-            frog.reset();
-        }
         if (keys[KeyEvent.VK_SHIFT]){
             fps += 10;
         }
@@ -200,9 +220,7 @@ public class FroggerMain extends JPanel {
         }
     }
 
-    /*
-      You probably don't need to modify this keyListener code.
-       */
+
     public void setKeyListener() {
         addKeyListener(new KeyListener() {
             @Override
@@ -212,6 +230,26 @@ public class FroggerMain extends JPanel {
             @Override
             public void keyPressed(KeyEvent keyEvent) {
                 keys[keyEvent.getKeyCode()] = true;
+                if (keys[KeyEvent.VK_R]){
+                    time = 0;
+                    frog.reset();
+                    if (!timer.isRunning()) {
+                        timer.start();
+                    }
+                    if (!countdown.isRunning()) {
+                        countdown.start();
+                    }
+                }
+                if (keys[KeyEvent.VK_ESCAPE]){
+                    System.exit(0);
+                }
+                if (keys[KeyEvent.VK_SPACE]) {
+                    if (timer.isRunning()){
+                        timer.stop();
+                    } else {
+                        timer.start();
+                    }
+                }
             }
 
             //when a key is released, its boolean is switched to false.
@@ -221,6 +259,23 @@ public class FroggerMain extends JPanel {
             }
         });
     }
+
+    public void gameOver(Graphics2D g2, int score, int deaths){
+        int vertical = 250;
+        g2.setColor(new Color(255, 255, 255));
+        g2.fillRect(0, 0, FRAME_WIDTH, FRAME_HEIGHT);
+        g2.setColor(new Color(0, 0, 0));
+        g2.setFont(new Font("Arial", Font.PLAIN, 24));
+        String scoreString = "Score: " + Integer.toString(score);
+        String deathString = "Deaths: " + Integer.toString(deaths);
+        String continueString = "Press R to continue";
+        String quitString = "Press ESC to quit";
+        g2.drawString(scoreString, FRAME_WIDTH/2-((scoreString.length()/2)*10), vertical);
+        g2.drawString(deathString, FRAME_WIDTH/2-((deathString.length()/2)*10), vertical + 24);
+        g2.drawString(continueString, FRAME_WIDTH/2-((continueString.length()/2)*10), vertical + 48);
+        g2.drawString(quitString, FRAME_WIDTH/2-((quitString.length()/2)*10), vertical + 72);
+    }
+
     //sets ups the panel and frame.  Probably not much to modify here.
     public static void main(String[] args) {
         JFrame window = new JFrame("Frogger!");

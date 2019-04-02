@@ -92,7 +92,7 @@ public class FroggerMain extends JPanel {
         }
 
         // Goal
-        goal = new Goal(500,0);
+        goal = new Goal(475,0);
 
         timer = new Timer(1000/fps, new ActionListener() {
             @Override

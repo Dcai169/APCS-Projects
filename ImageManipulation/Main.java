@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 
+// Daniel Cai
+
 public class Main extends JPanel {
 
     private CustomImage myImage;
